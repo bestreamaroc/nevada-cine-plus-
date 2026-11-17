@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NEVADA CINE PLUS — powered by BE STREAM</title>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.7/dist/hls.min.js"></script>
+  <style>
+    :root { --bg: #060913; --rail: #0b1020; --card: #12192e; --accent: #00d2ff; --gold: #f5b942; --accent2: #0077ff; --text: #f8fafc; --muted: #94a3b8; }
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body { background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, sans-serif; overflow: hidden; height: 100vh; width: 100vw; }
+    .focusable:focus { outline: 3px solid var(--accent); transform: scale(1.03); }
+
+    #login-screen { display: flex; align-items: center; justify-content: center; height: 100vh; background: radial-gradient(circle at top right, #0f2342 0%, #060913 65%); padding: 20px; }
+    .login-box { width: 100%; max-width: 500px; background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(0, 210, 255, 0.25); border-radius: 20px; padding: 26px; box-shadow: 0 25px 50px rgba(0,0,0,0.65); }
+    .brand { text-align: center; margin-bottom: 16px; }
+    .brand h1 { font-size: 1.55rem; font-weight: 900; color: var(--accent); letter-spacing: 1px; }
+    .brand h1 span { color: var(--gold); }
+    .brand p { font-size: 0.78rem; color: var(--muted); margin-top: 2px; letter-spacing: 1px; }
+    .lang-bar { display: flex; justify-content: center; gap: 6px; margin-bottom: 14px; }
+    .lang-btn { padding: 4px 10px; border-radius: 8px; border: 1px solid #1e293b; background: #020617; color: #94a3b8; font-size: 0.75rem; cursor: pointer; }
+    .lang-btn.active { border-color: var(--accent); color: var(--accent); font-weight: 700; }
+    .mode-tabs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
+    .mode-btn { padding: 11px; border-radius: 12px; border: 1px solid #1e293b; background: #0b1120; color: var(--muted); font-weight: 700; cursor: pointer; font-size: 0.88rem; }
+    .mode-btn.active { background: linear-gradient(135deg, var(--accent2), var(--accent)); color: #fff; border-color: transparent; }
+    .field { margin-bottom: 12px; }
+    .field label { display: block; font-size: 0.8rem; color: #cbd5e1; margin-bottom: 5px; }
+    .field input { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid #334155; background: #020617; color: #fff; font-size: 0.92rem; }
+    .submit-btn { width: 100%; padding: 14px; border: none; border-radius: 12px; background: linear-gradient(135deg, var(--accent2), var(--accent)); color: #fff; font-weight: 800; font-size: 0.98rem; cursor: pointer; margin-top: 6px; }
+    #login-status { text-align: center; font-size: 0.82rem; margin-top: 10px; color: var(--accent); min-height: 18px; }
+
+    #tv-app { display: none; height: 100vh; width: 100vw; position: relative; }
+    .left-rail { position: fixed; left: 0; top: 0; bottom: 0; width: 68px; background: var(--rail); border-right: 1px solid rgba(255,255,255,0.06); display: flex; flex-direction: column; align-items: center; padding: 16px 0; gap: 14px; z-index: 20; }
+    .rail-logo { font-weight: 900; color: var(--gold); font-size: 1.05rem; margin-bottom: 4px; }
+    .rail-item { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: transparent; border: none; color: var(--muted); font-size: 1.15rem; cursor: pointer; }
+    .rail-item.active { background: var(--accent); color: #04101f; font-weight: bold; }
+
+    .main-stage { margin-left: 68px; height: 100vh; display: flex; flex-direction: column; position: relative; }
+    .top-pills { position: absolute; top: 18px; left: 28px; display: flex; gap: 8px; z-index: 15; flex-wrap: wrap; }
+    .pill { padding: 7px 18px; border-radius: 999px; background: rgba(15, 23, 42, 0.8); border: 1px solid rgba(255,255,255,0.12); color: #e2e8f0; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
+    .pill.active { background: #fff; color: #060913; }
+
+    .hero { height: 50vh; padding: 70px 32px 18px; background: linear-gradient(to top, var(--bg) 8%, rgba(6,9,19,0.35) 60%, rgba(6,9,19,0.75) 100%), url('https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&w=1200&q=60') center/cover; display: flex; flex-direction: column; justify-content: flex-end; }
+    .hero-badge { display: inline-block; width: fit-content; padding: 4px 10px; border-radius: 6px; background: rgba(0, 210, 255, 0.22); color: var(--accent); font-size: 0.72rem; font-weight: 800; margin-bottom: 6px; text-transform: uppercase; }
+    .hero-title { font-size: 2rem; font-weight: 900; margin-bottom: 4px; }
+    .hero-meta { font-size: 0.85rem; color: #cbd5e1; }
+
+    .rows-area { flex: 1; padding: 10px 32px 20px; overflow-y: auto; }
+    .row-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .row-title { font-size: 0.95rem; font-weight: 700; color: #e2e8f0; }
+    .row-count { font-size: 0.78rem; color: var(--accent); }
+    .poster-row { display: flex; gap: 12px; overflow-x: auto; padding: 4px 2px 14px; scrollbar-width: none; }
+    .poster-row::-webkit-scrollbar { display: none; }
+    .poster-card { min-width: 145px; height: 205px; border-radius: 14px; background: var(--card); border: 1px solid rgba(255,255,255,0.08); overflow: hidden; position: relative; cursor: pointer; display: flex; flex-direction: column; justify-content: flex-end; padding: 10px; transition: 0.15s; }
+    .poster-card:hover, .poster-card:focus { outline: 3px solid var(--accent); transform: scale(1.04); }
+    .poster-card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.85; }
+    .poster-card .p-grad { position: absolute; inset: 0; background: linear-gradient(to top, rgba(6,9,19,0.96) 12%, transparent 65%); }
+    .poster-card .p-name { position: relative; z-index: 2; font-size: 0.8rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    #player-overlay { display: none; position: fixed; inset: 0; background: #000; z-index: 50; }
+    #video-el { width: 100%; height: 100%; object-fit: contain; }
+    .player-hud { position: absolute; top: 18px; right: 20px; left: 20px; display: flex; justify-content: space-between; align-items: center; background: rgba(6,9,19,0.78); padding: 10px 16px; border-radius: 12px; }
+    .close-player { padding: 7px 14px; border-radius: 8px; border: none; background: #ef4444; color: #fff; font-weight: 700; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div id="login-screen">
+    <div class="login-box">
+      <div class="brand">
+        <h1>NEVADA <span>CINE PLUS</span></h1>
+        <p>POWERED BY BE STREAM</p>
+      </div>
+      <div class="lang-bar">
+        <button class="lang-btn active focusable" onclick="setLang('en', this)">English</button>
+        <button class="lang-btn focusable" onclick="setLang('fr', this)">Français</button>
+        <button class="lang-btn focusable" onclick="setLang('ar', this)">العربية</button>
+      </div>
+      <div class="mode-tabs">
+        <button class="mode-btn active focusable" onclick="setMode('playlist', this)">Playlist</button>
+        <button class="mode-btn focusable" onclick="setMode('xtream', this)">Xtream Codes</button>
+        <button class="mode-btn focusable" onclick="setMode('url', this)">URL</button>
+      </div>
+      <div id="form-playlist">
+        <div class="field"><label data-i18n="file">Select Local Playlist (.m3u / .m3u8)</label><input type="file" id="m3u-file" accept=".m3u,.m3u8,.txt" class="focusable" /></div>
+      </div>
+      <div id="form-xtream" style="display:none;">
+        <div class="field"><label data-i18n="host">Server URL</label><input type="text" id="xt-host" placeholder="http://server.com:8080" class="focusable" /></div>
+        <div class="field"><label data-i18n="user">Username</label><input type="text" id="xt-user" placeholder="Username" class="focusable" /></div>
+        <div class="field"><label data-i18n="pass">Password</label><input type="password" id="xt-pass" placeholder="Password" class="focusable" /></div>
+      </div>
+      <div id="form-url" style="display:none;">
+        <div class="field"><label data-i18n="m3u">M3U Playlist URL</label><input type="url" id="m3u-url" placeholder="http://server.com/get.php?username=..." class="focusable" /></div>
+      </div>
+      <button class="submit-btn focusable" onclick="connectAndCache()" data-i18n="btn">Connect & Cache</button>
+      <div id="login-status"></div>
+    </div>
+  </div>
+
+  <div id="tv-app">
+    <aside class="left-rail">
+      <div class="rail-logo">NC+</div>
+      <button class="rail-item active focusable" onclick="filterTab('home', this)">⌂</button>
+      <button class="rail-item focusable" onclick="filterTab('live', this)">📺</button>
+      <button class="rail-item focusable" onclick="filterTab('sports', this)">⚽</button>
+      <button class="rail-item focusable" onclick="filterTab('movies', this)">🎬</button>
+      <button class="rail-item focusable" onclick="filterTab('series', this)">🎞️</button>
+      <button class="rail-item focusable" style="margin-top:auto;" onclick="logout()">⚙</button>
+    </aside>
+    <main class="main-stage">
+      <div class="top-pills">
+        <button class="pill active focusable" onclick="filterTab('home', this)" data-i18n="t_home">Home</button>
+        <button class="pill focusable" onclick="filterTab('live', this)" data-i18n="t_live">Live TV</button>
+        <button class="pill focusable" onclick="filterTab('sports', this)" data-i18n="t_sports">Matches</button>
+        <button class="pill focusable" onclick="filterTab('movies', this)" data-i18n="t_movies">Movies</button>
+        <button class="pill focusable" onclick="filterTab('series', this)" data-i18n="t_series">Series</button>
+      </div>
+      <section class="hero" id="hero-bg">
+        <span class="hero-badge" id="hero-cat">NEVADA CINE PLUS • BE STREAM</span>
+        <h2 class="hero-title" id="hero-title">NEVADA CINE PLUS</h2>
+        <p class="hero-meta" id="hero-meta" data-i18n="hero_sub">Select any channel or movie to play instantly</p>
+      </section>
+      <section class="rows-area">
+        <div class="row-header">
+          <div class="row-title">Featured Channels & VOD</div>
+          <div class="row-count" id="row-count"></div>
+        </div>
+        <div class="poster-row" id="cards-container"></div>
+      </section>
+    </main>
+  </div>
+
+  <div id="player-overlay">
+    <div class="player-hud">
+      <strong id="playing-name">Streaming...</strong>
+      <button class="close-player focusable" onclick="stopStream()" data-i18n="back">Back ✕</button>
+    </div>
+    <video id="video-el" controls autoplay playsinline></video>
+  </div>
+
+  <script>
+    let currentMode = 'playlist', cachedItems = [], currentViewItems = [], hlsInstance = null;
+    const i18n = {
+      en: { host: 'Server URL', user: 'Username', pass: 'Password', m3u: 'M3U Playlist URL', file: 'Select Local Playlist (.m3u / .m3u8)', btn: 'Connect & Cache', t_home: 'Home', t_live: 'Live TV', t_sports: 'Matches', t_movies: 'Movies', t_series: 'Series', hero_sub: 'Select any channel or movie to play instantly', back: 'Back ✕' },
+      fr: { host: 'URL du Serveur', user: "Nom d'utilisateur", pass: 'Mot de passe', m3u: 'Lien Playlist M3U', file: 'Fichier Playlist (.m3u)', btn: 'Connexion & Cache', t_home: 'Accueil', t_live: 'Direct TV', t_sports: 'Matchs', t_movies: 'Films', t_series: 'Séries', hero_sub: 'Sélectionnez une chaîne ou un film', back: 'Retour ✕' },
+      ar: { host: 'رابط السيرفر', user: 'اسم المستخدم', pass: 'كلمة المرور', m3u: 'رابط قائمة التشغيل M3U', file: 'اختر ملف القائمة (.m3u)', btn: 'دخول وحفظ في الذاكرة', t_home: 'الرئيسية', t_live: 'بث مباشر', t_sports: 'مباريات', t_movies: 'أفلام', t_series: 'مسلسلات', hero_sub: 'اضغط على أي قناة أو فيلم للتشغيل الفوري', back: 'رجوع ✕' }
+    };
+
+    function setLang(lang, btn) {
+      document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const k = el.getAttribute('data-i18n');
+        if (i18n[lang][k]) el.textContent = i18n[lang][k];
+      });
+    }
+
+    window.onload = () => {
+      const saved = localStorage.getItem('nevada_cache_v1');
+      if (saved) { cachedItems = JSON.parse(saved); openTVInterface(); }
+    };
+
+    function setMode(mode, btn) {
+      currentMode = mode;
+      document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('form-playlist').style.display = mode === 'playlist' ? 'block' : 'none';
+      document.getElementById('form-xtream').style.display = mode === 'xtream' ? 'block' : 'none';
+      document.getElementById('form-url').style.display = mode === 'url' ? 'block' : 'none';
+    }
+
+    async function directFetch(targetUrl) {
+      const res = await fetch(targetUrl);
+      if (!res.ok) throw new Error('Connection failed');
+      return await res.text();
+    }
+
+    async function connectAndCache() {
+      const status = document.getElementById('login-status');
+      status.style.color = '#00d2ff';
+      status.textContent = 'Connecting & caching...';
+      try {
+        if (currentMode === 'xtream') {
+          const host = document.getElementById('xt-host').value.trim().replace(/\/$/, '');
+          const user = document.getElementById('xt-user').value.trim();
+          const pass = document.getElementById('xt-pass').value.trim();
+          if (!host || !user || !pass) throw new Error('Fill all fields');
+          const [liveRaw, vodRaw, serRaw] = await Promise.all([
+            directFetch(`${host}/player_api.php?username=${user}&password=${pass}&action=get_live_streams`),
+            directFetch(`${host}/player_api.php?username=${user}&password=${pass}&action=get_vod_streams`).catch(() => '[]'),
+            directFetch(`${host}/player_api.php?username=${user}&password=${pass}&action=get_series`).catch(() => '[]')
+          ]);
+          const lives = JSON.parse(liveRaw).slice(0, 200).map(ch => ({
+            name: ch.name,
+            cat: /sport|bein|ssc|foot|canal|sky|dazn|arryadia/i.test(ch.name) ? 'sports' : 'live',
+            url: `${host}/live/${user}/${pass}/${ch.stream_id}.m3u8`,
+            img: ch.stream_icon || ''
+          }));
+          const movies = JSON.parse(vodRaw).slice(0, 150).map(m => ({
+            name: m.name, cat: 'movies',
+            url: `${host}/movie/${user}/${pass}/${m.stream_id}.${m.container_extension || 'mp4'}`,
+            img: m.stream_icon || ''
+          }));
+          const series = JSON.parse(serRaw).slice(0, 100).map(s => ({
+            name: s.name, cat: 'series', url: '', img: s.cover || ''
+          }));
+          cachedItems = [...lives, ...movies, ...series];
+        } else if (currentMode === 'url') {
+          const m3u = document.getElementById('m3u-url').value.trim();
+          if (!m3u) throw new Error('Enter M3U URL');
+          cachedItems = parseM3U(await directFetch(m3u));
+        } else {
+          const file = document.getElementById('m3u-file').files[0];
+          if (!file) throw new Error('Select playlist file');
+          cachedItems = parseM3U(await file.text());
+        }
+        if (!cachedItems.length) throw new Error('No channels found');
+        localStorage.setItem('nevada_cache_v1', JSON.stringify(cachedItems));
+        openTVInterface();
+      } catch (err) {
+        status.style.color = '#f87171';
+        status.textContent = err.message;
+      }
+    }
+
+    function parseM3U(text) {
+      const lines = text.split('\n'), list = [];
+      let name = 'Channel', logo = '', group = '';
+      for (let i = 0; i < lines.length && list.length < 500; i++) {
+        const line = lines[i].trim();
+        if (line.startsWith('#EXTINF')) {
+          const c = line.lastIndexOf(',');
+          name = c > -1 ? line.slice(c + 1).trim() : 'Channel';
+          logo = (line.match(/tvg-logo="([^"]+)"/) || [])[1] || '';
+          group = (line.match(/group-title="([^"]+)"/) || [])[1] || '';
+        } else if (line.startsWith('http')) {
+          let cat = 'live';
+          if (line.includes('/movie/') || /vod|film|movie|cinema/i.test(group)) cat = 'movies';
+          else if (line.includes('/series/') || /serie|series|saison/i.test(group)) cat = 'series';
+          else if (/sport|bein|ssc|foot|match|arryadia/i.test(name + ' ' + group)) cat = 'sports';
+          list.push({ name, cat, url: line, img: logo });
+        }
+      }
+      return list;
+    }
+
+    function openTVInterface() {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('tv-app').style.display = 'block';
+      filterTab('home', document.querySelector('.pill'));
+    }
+
+    function filterTab(cat, el) {
+      document.querySelectorAll('.pill, .rail-item').forEach(b => b.classList.remove('active'));
+      if (el) el.classList.add('active');
+      currentViewItems = cat === 'home' ? cachedItems.slice(0, 100) : cachedItems.filter(i => i.cat === cat);
+      document.getElementById('row-count').textContent = `${currentViewItems.length} items`;
+      const container = document.getElementById('cards-container');
+      container.innerHTML = currentViewItems.map((item, idx) => `
+        <div class="poster-card focusable" tabindex="0" onfocus="previewHero(${idx})" onmouseover="previewHero(${idx})" onclick="playStream('${item.url}', '${item.name.replace(/'/g, '')}')">
+          <img src="${item.img}" loading="lazy" onerror="this.style.display='none'" />
+          <div class="p-grad"></div>
+          <div class="p-name">${item.name}</div>
+        </div>
+      `).join('');
+      if (currentViewItems[0]) previewHero(0);
+    }
+
+    function previewHero(idx) {
+      const item = currentViewItems[idx];
+      if (!item) return;
+      document.getElementById('hero-title').textContent = item.name;
+      document.getElementById('hero-cat').textContent = `${item.cat.toUpperCase()} • BE STREAM`;
+      if (item.img) document.getElementById('hero-bg').style.backgroundImage = `linear-gradient(to top, #060913 10%, rgba(6,9,19,0.4) 60%, rgba(6,9,19,0.75) 100%), url('${item.img}')`;
+    }
+
+    function playStream(url, title) {
+      if (!url) return;
+      const overlay = document.getElementById('player-overlay'), video = document.getElementById('video-el');
+      document.getElementById('playing-name').textContent = title;
+      overlay.style.display = 'block';
+      if (Hls.isSupported() && url.includes('.m3u8')) {
+        if (hlsInstance) hlsInstance.destroy();
+        hlsInstance = new Hls(); hlsInstance.loadSource(url); hlsInstance.attachMedia(video);
+      } else { video.src = url; }
+      video.play();
+    }
+
+    function stopStream() {
+      const video = document.getElementById('video-el');
+      video.pause(); video.src = '';
+      if (hlsInstance) hlsInstance.destroy();
+      document.getElementById('player-overlay').style.display = 'none';
+    }
+
+    function logout() { localStorage.removeItem('nevada_cache_v1'); location.reload(); }
+  </script>
+</body>
+</html>
