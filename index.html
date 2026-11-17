@@ -11,7 +11,6 @@
     body { background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, sans-serif; overflow: hidden; height: 100vh; width: 100vw; }
     .focusable:focus { outline: 3px solid var(--accent); transform: scale(1.04); z-index: 10; }
 
-    /* Login Screen */
     #login-screen { display: flex; align-items: center; justify-content: center; height: 100vh; background: #060913; padding: 20px; }
     .login-box { width: 100%; max-width: 500px; background: #0f172a; border: 1px solid rgba(0, 210, 255, 0.25); border-radius: 18px; padding: 26px; }
     .brand { text-align: center; margin-bottom: 16px; }
@@ -30,7 +29,6 @@
     .submit-btn { width: 100%; padding: 14px; border: none; border-radius: 12px; background: linear-gradient(135deg, var(--accent2), var(--accent)); color: #fff; font-weight: 800; font-size: 0.98rem; cursor: pointer; margin-top: 6px; }
     #login-status { text-align: center; font-size: 0.82rem; margin-top: 10px; color: var(--accent); min-height: 18px; }
 
-    /* EveryCine TV Interface (Hardware Optimized) */
     #tv-app { display: none; height: 100vh; width: 100vw; position: relative; }
     .left-rail { position: fixed; left: 0; top: 0; bottom: 0; width: 68px; background: var(--rail); border-right: 1px solid rgba(255,255,255,0.06); display: flex; flex-direction: column; align-items: center; padding: 16px 0; gap: 14px; z-index: 20; }
     .rail-logo { font-weight: 900; color: var(--gold); font-size: 1.05rem; margin-bottom: 4px; }
@@ -54,6 +52,7 @@
     .poster-row { display: flex; gap: 12px; overflow-x: auto; padding: 6px 4px 14px; scrollbar-width: none; }
     .poster-row::-webkit-scrollbar { display: none; }
     .poster-card { min-width: 145px; height: 200px; border-radius: 14px; background: var(--card); border: 1px solid rgba(255,255,255,0.08); overflow: hidden; position: relative; cursor: pointer; display: flex; flex-direction: column; justify-content: flex-end; padding: 10px; will-change: transform; }
+    .poster-card:hover, .poster-card:focus { outline: 3px solid var(--accent); transform: scale(1.04); }
     .poster-card img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.85; }
     .poster-card .p-grad { position: absolute; inset: 0; background: linear-gradient(to top, rgba(6,9,19,0.96) 14%, transparent 65%); }
     .poster-card .p-name { position: relative; z-index: 2; font-size: 0.8rem; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -138,9 +137,10 @@
     <video id="video-el" controls autoplay playsinline></video>
   </div>
 
+  <script src="cordova.js"></script>
   <script>
     let currentMode = 'playlist', cachedItems = [], currentViewItems = [], renderedCount = 0, hlsInstance = null;
-    const CHUNK_SIZE = 30; // رسم 30 بطاقة فقط في كل مرة لمنع تشنج الذاكرة
+    const CHUNK_SIZE = 30;
 
     const i18n = {
       en: { host: 'Server URL', user: 'Username', pass: 'Password', m3u: 'M3U Playlist URL', file: 'Select Local Playlist (.m3u / .m3u8)', btn: 'Connect & Cache', t_home: 'Home', t_live: 'Live TV', t_sports: 'Matches', t_movies: 'Movies', t_series: 'Series', hero_sub: 'Use D-Pad arrows and press OK to play', back: 'Back ✕' },
@@ -148,7 +148,6 @@
       ar: { host: 'رابط السيرفر', user: 'اسم المستخدم', pass: 'كلمة المرور', m3u: 'رابط قائمة التشغيل M3U', file: 'اختر ملف القائمة (.m3u)', btn: 'دخول وحفظ في الذاكرة', t_home: 'الرئيسية', t_live: 'بث مباشر', t_sports: 'مباريات', t_movies: 'أفلام', t_series: 'مسلسلات', hero_sub: 'تنقل بالريموت واضغط OK للتشغيل الفوري', back: 'رجوع ✕' }
     };
 
-    // IndexedDB غير متزامن لتخزين ضخم بدون تجميد الشاشة
     function dbAction(type, data) {
       return new Promise((resolve) => {
         const req = indexedDB.open('NevadaCineDB', 1);
@@ -194,6 +193,15 @@
     }
 
     async function directFetch(targetUrl) {
+      if (window.cordova && cordova.plugin && cordova.plugin.http) {
+        return new Promise((resolve, reject) => {
+          cordova.plugin.http.setDataSerializer('utf8');
+          cordova.plugin.http.get(targetUrl, {}, { 'User-Agent': 'IPTVSmartersPro' },
+            (res) => resolve(res.data),
+            (err) => reject(new Error('Server error: ' + (err.status || 'unreachable')))
+          );
+        });
+      }
       const res = await fetch(targetUrl);
       if (!res.ok) throw new Error('Connection failed');
       return await res.text();
@@ -202,7 +210,7 @@
     async function connectAndCache() {
       const status = document.getElementById('login-status');
       status.style.color = '#00d2ff';
-      status.textContent = 'Loading & caching in background...';
+      status.textContent = 'Connecting & caching in background...';
       try {
         if (currentMode === 'xtream') {
           const host = document.getElementById('xt-host').value.trim().replace(/\/$/, '');
@@ -351,7 +359,6 @@
       location.reload();
     }
 
-    // التحكم الكامل بأزرار الريموت (D-Pad Navigation)
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' || e.key === 'Backspace' || e.keyCode === 4) {
         if (document.getElementById('player-overlay').style.display === 'block') {
