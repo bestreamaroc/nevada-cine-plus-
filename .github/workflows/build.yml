@@ -1,4 +1,4 @@
-name: Build Nevada Ciherellus TV APK
+name: Build Nevada Cine Plus TV APK
 on: [push]
 
 jobs:
