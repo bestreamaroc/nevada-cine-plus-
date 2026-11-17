@@ -1,4 +1,4 @@
-name: Build Nevada Cine Plus APK
+name: Build Nevada Cine Plus TV APK
 on: [push]
 
 jobs:
@@ -15,18 +15,19 @@ jobs:
           java-version: '17'
       - uses: android-actions/setup-android@v3
 
-      - name: Create Cordova TV Project
+      - name: Create Hardware-Accelerated TV Project
         run: |
           npm install -g cordova
           cordova create app com.bestream.nevadacineplus "NEVADA CINE PLUS"
           cp index.html app/www/index.html
           cd app
           cordova platform add android
-          sed -i 's/<application /<application android:usesCleartextTraffic="true" /g' platforms/android/app/src/main/AndroidManifest.xml
+          sed -i 's/<application /<application android:usesCleartextTraffic="true" android:hardwareAccelerated="true" android:largeHeap="true" /g' platforms/android/app/src/main/AndroidManifest.xml
+          sed -i 's/android.intent.category.LAUNCHER/android.intent.category.LAUNCHER" \/><category android:name="android.intent.category.LEANBACK_LAUNCHER/g' platforms/android/app/src/main/AndroidManifest.xml
           cordova build android
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: NEVADA-CINE-PLUS-APK
+          name: NEVADA-CINE-PLUS-TV-APK
           path: app/platforms/android/app/build/outputs/apk/debug/app-debug.apk
