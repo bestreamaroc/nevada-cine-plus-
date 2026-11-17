@@ -14,7 +14,7 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Accept Android Licenses & Build TV APK
+      - name: Build Native-Network TV APK
         run: |
           yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
           npm install -g cordova
@@ -22,6 +22,8 @@ jobs:
           cp index.html app/www/index.html
           cd app
           cordova platform add android
+          cordova plugin add cordova-plugin-advanced-http
+          sed -i 's/<\/widget>/<access origin="*" \/><allow-navigation href="*" \/><\/widget>/g' config.xml
           sed -i 's/<application /<application android:usesCleartextTraffic="true" android:hardwareAccelerated="true" android:largeHeap="true" /g' platforms/android/app/src/main/AndroidManifest.xml
           sed -i 's/android.intent.category.LAUNCHER/android.intent.category.LAUNCHER" \/><category android:name="android.intent.category.LEANBACK_LAUNCHER/g' platforms/android/app/src/main/AndroidManifest.xml
           cordova build android
