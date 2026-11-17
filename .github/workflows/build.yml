@@ -1,4 +1,4 @@
-name: Build Nevada Cine Plus TV APK
+name: Build Nevada Ciherellus TV APK
 on: [push]
 
 jobs:
@@ -13,10 +13,10 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '17'
-      - uses: android-actions/setup-android@v3
 
-      - name: Create Hardware-Accelerated TV Project
+      - name: Accept Android Licenses & Build TV APK
         run: |
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
           npm install -g cordova
           cordova create app com.bestream.nevadacineplus "NEVADA CINE PLUS"
           cp index.html app/www/index.html
